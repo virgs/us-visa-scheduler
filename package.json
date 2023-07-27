@@ -1,0 +1,19 @@
+{
+  "name": "us-visa-scheduler",
+  "version": "0.0.1",
+  "description": "Plays a song you when a good candidate date is available",
+  "main": "index.js",
+  "scripts": {
+    "test": "NODE_ENV=TEST && node --experimental-vm-modules node_modules/jest/bin/jest.js"
+  },
+  "author": "Virgs (guilherme.moraes@outlook.com)",
+  "license": "MIT",
+  "devDependencies": {
+    "jest": "^29.6.1"
+  },
+  "jest": {
+    "setupFilesAfterEnv": [
+      "./jest.setup.js"
+    ]
+  }
+}
