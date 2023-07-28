@@ -21,6 +21,13 @@ describe('tests', () => {
       .toBe(`https://ais.usvisa-info.com/${index.language}/niv/schedule/${index.sessionNumber}/appointment/times/${cityCode}.json?date=${date}&appointments[expedite]=false`);
   })
 
+  it('getDatesUrl should use right values', () => {
+    const cityCode = 123;
+
+    expect(index.getDatesUrl(cityCode))
+      .toBe(`https://ais.usvisa-info.com/${index.language}/niv/schedule/${index.sessionNumber}/appointment/days/${cityCode}.json?appointments[expedite]=false`);
+  })
+
   it('fetchAvailableDateTimes should use right values', async () => {
     const cityCode = 123;
     const date = '2023-11-27';

@@ -134,6 +134,7 @@ if (typeof window !== "undefined") {
         sessionNumber,
         createRequest,
         getDayTimesUrl,
+        getDatesUrl,
         fetchAvailableDateTimes
     }
 }

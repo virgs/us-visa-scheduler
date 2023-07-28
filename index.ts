@@ -3,8 +3,10 @@ const cityCodes = [55, 56]; // Rio, São Paulo
 const formattedMaxDate = '2023-02-28'; // YYYY-MM-DD
 const formattedMinDate = '2023-02-01'; // YYYY-MM-DD
 const maxNumberOfCandidateDates = 4; //avoid throttling
-const language = 'pt-br';
 const sessionNumber = 38681568;
+const language = 'pt-br';
+
+//==================
 
 const minIntervalBetweenFetchesInMinutes = 2;
 const randomizedIntervalBetweenFetchesInMinutes = 2;
@@ -13,16 +15,8 @@ const audio = new Audio(audioSource)
 const maxDate = new Date(formattedMaxDate).getTime();
 const minDate = new Date(formattedMinDate).getTime();
 
-function getDatesUrl(cityCode) {
-    return `https://ais.usvisa-info.com/${language}/niv/schedule/${sessionNumber}/appointment/days/${cityCode}.json?appointments[expedite]=false`
-}
 
-
-function getDayTimesUrl(cityCode, availableDay) {
-    return `https://ais.usvisa-info.com/${language}/niv/schedule/${sessionNumber}/appointment/times/${cityCode}.json?date=${availableDay}&appointments[expedite]=false`
-}
-
-let forceStop = false
+let forceStop: boolean = false
 
 function stopScript() {
     forceStop = true
@@ -50,7 +44,7 @@ async function start() {
 }
 
 
-async function search() {
+async function search(): Promise<void> {
     for (let cityCode of cityCodes) {
         const cityAvailableDates = await fetchAvailableDates(cityCode);
         const cityAvailableDatesInTimeRange = cityAvailableDates
@@ -62,7 +56,7 @@ async function search() {
         if (cityAvailableDatesInTimeRange.length > 0) {
             console.log(`The first one being on '${cityAvailableDatesInTimeRange[0].date}'. Filtering up to ${maxNumberOfCandidateDates} to avoid throttling`);
             await Promise.all(cityAvailableDatesInTimeRange
-                .filter((date, index) => index < maxNumberOfCandidateDates)
+                .filter((_, index) => index < maxNumberOfCandidateDates)
                 .map(async (date, index) => {
                     await sleep(secondsBetweenDateTimeFetchCalls * 1000 * index)
                     await checkCandidateDate(cityCode, date);
@@ -73,7 +67,7 @@ async function search() {
     }
 }
 
-async function checkCandidateDate(cityCode, bestDateOfFetch) {
+async function checkCandidateDate(cityCode: number, bestDateOfFetch: AvailableDate) {
     console.log(`City ${cityCode}. Candidate day ${bestDateOfFetch.date}`);
     console.log('Checking times of the day');
     const availableDateTimes = await fetchAvailableDateTimes(cityCode, bestDateOfFetch.date)
@@ -89,26 +83,27 @@ async function checkCandidateDate(cityCode, bestDateOfFetch) {
     }
 }
 
-async function fetchAvailableDates(cityCode) {
+async function fetchAvailableDates(cityCode: number): Promise<AvailableDate[]> {
     console.log('Fetching dates...');
     const url = getDatesUrl(cityCode);
     const request = createRequest(url);
     const res = await fetch(request);
-    const json = await res.json(); //[{"date":"2023-11-27","business_day":true},{"date":"2023-11-28","business_day":true}]
+    const json = await res.json() as AvailableDate[];  //[{"date":"2023-11-27","business_day":true},{"date":"2023-11-28","business_day":true}]
     return json
         .filter(item => item.business_day);
 }
 
-async function fetchAvailableDateTimes(cityCode, date) {
+
+async function fetchAvailableDateTimes(cityCode: number, date: string): Promise<string[]> {
     console.log('Fetching available time slots...');
     const request = createRequest(getDayTimesUrl(cityCode, date.toString()));
     const res = await fetch(request);
-    const json = await res.json(); //{available_times: ["08:15"], business_times: ["08:15", "08:30", "09:15"]}
+    const json = await res.json() as AvailableDateTimes; //{available_times: ["08:15"], business_times: ["08:15", "08:30", "09:15"]}
     return json.available_times
         .reduce((acc, item) => json.business_times.includes(item) ? [...acc, item] : acc, []);
 }
 
-function createRequest(url) {
+function createRequest(url: string) {
     return new Request(url, {
         method: 'GET',
         headers: {
@@ -119,6 +114,26 @@ function createRequest(url) {
             'X-Requested-With': 'XMLHttpRequest'
         }
     });
+}
+
+type AvailableDate = {
+    date: string
+    business_day: string
+}
+
+type AvailableDateTimes = {
+    available_times: string[]
+    business_times: string[]
+}
+
+
+function getDatesUrl(cityCode: number) {
+    return `https://ais.usvisa-info.com/${language}/niv/schedule/${sessionNumber}/appointment/days/${cityCode}.json?appointments[expedite]=false`
+}
+
+
+function getDayTimesUrl(cityCode: number, availableDay: string) {
+    return `https://ais.usvisa-info.com/${language}/niv/schedule/${sessionNumber}/appointment/times/${cityCode}.json?date=${availableDay}&appointments[expedite]=false`
 }
 
 function sleep(ms) {
