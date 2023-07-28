@@ -1,5 +1,5 @@
-const testUtils = require("./test-utils");
-const index = require('./');
+const tests = require("./mocks");
+const index = require('.');
 
 describe('tests', () => {
   it('createRequest should use right values', () => {
@@ -27,13 +27,13 @@ describe('tests', () => {
 
     const response = await index.fetchAvailableDateTimes(cityCode, date);
 
-    expect(testUtils.mocks.fetch.fetchMock).toBeCalledWith(
+    expect(tests.mocks.fetch.fetchMock).toBeCalledWith(
       expect.objectContaining({
         url: index.getDayTimesUrl(cityCode, date),
         method: `GET`
       }));
 
-    testHeaders(testUtils.mocks.fetch.fetchMock.mock.lastCall[0].headers);
+    testHeaders(tests.mocks.fetch.fetchMock.mock.lastCall[0].headers);
     expect(response).toEqual(["08:15"]);
   })
 
