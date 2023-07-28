@@ -21,8 +21,10 @@ const jsonMockImplementation = (request) => {
   } else if (request.url === "https://ais.usvisa-info.com/pt-br/niv/schedule/38681568/appointment/days/56.json?appointments[expedite]=false") {
     return [beforeMinDate, afterMaxDate]
   } else {
-    if (request.url === "https://ais.usvisa-info.com/pt-br/niv/schedule/38681568/appointment/times/123.json?date=2023-11-27&appointments[expedite]=false") {
+    if (request.url === "https://ais.usvisa-info.com/pt-br/niv/schedule/38681568/appointment/times/55.json?date=2023-02-15&appointments[expedite]=false") {
       return { available_times: ["08:15"], business_times: ["08:15", "08:30", "09:15"] }
+    } if (request.url === "https://ais.usvisa-info.com/pt-br/niv/schedule/38681568/appointment/times/100.json?date=2023-02-15&appointments[expedite]=false") {
+      return { available_times: [], business_times: ["08:15", "08:30", "09:15"] }
     } else {
       console.error("Test scenario not anticipated: " + request.url)
     }

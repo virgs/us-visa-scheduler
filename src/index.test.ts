@@ -2,6 +2,12 @@ const tests = require("./mocks");
 const index = require('.');
 
 describe('tests', () => {
+  beforeEach(() => {
+    tests.mocks.audio.playMock.mockClear();
+    tests.mocks.fetch.fetchMock.mockClear();
+    tests.mocks.fetch.jsonMock().mockClear();
+  })
+
   it('createRequest should use right values', () => {
     const url = 'http://url.com/';
 
@@ -14,23 +20,23 @@ describe('tests', () => {
   });
 
   it('getDayTimesUrl should use right values', () => {
-    const cityCode = 123;
-    const date = '2023-11-27';
+    const cityCode = 55;
+    const date = '2023-02-15';
 
     expect(index.getDayTimesUrl(cityCode, date))
       .toBe(`https://ais.usvisa-info.com/${index.language}/niv/schedule/${index.sessionNumber}/appointment/times/${cityCode}.json?date=${date}&appointments[expedite]=false`);
   })
 
   it('getDatesUrl should use right values', () => {
-    const cityCode = 123;
+    const cityCode = 55;
 
     expect(index.getDatesUrl(cityCode))
       .toBe(`https://ais.usvisa-info.com/${index.language}/niv/schedule/${index.sessionNumber}/appointment/days/${cityCode}.json?appointments[expedite]=false`);
   })
 
   it('fetchAvailableDateTimes should use right values', async () => {
-    const cityCode = 123;
-    const date = '2023-11-27';
+    const cityCode = 55;
+    const date = '2023-02-15';
 
     const response = await index.fetchAvailableDateTimes(cityCode, date);
 
@@ -64,6 +70,36 @@ describe('tests', () => {
       business_day: true,
       date: "2023-02-11"
     }]);
+  })
+
+  it('checkDateTimes should use right values and call audio', async () => {
+    const cityCode = 55;
+    const day = { date: '2023-02-15' }
+
+    const response = await index.checkDateTimes(cityCode, day);
+
+    expect(response).toBeTruthy();
+    expect(tests.mocks.fetch.fetchMock).toBeCalledWith(
+      expect.objectContaining({
+        url: index.getDayTimesUrl(cityCode, day.date)
+      }));
+
+    expect(tests.mocks.audio.playMock).toHaveBeenCalled()
+  })
+
+  it('checkDateTimes with no available time should not call audio', async () => {
+    const cityCode = 100;
+    const day = { date: '2023-02-15' }
+
+    const response = await index.checkDateTimes(cityCode, day);
+
+    expect(response).toBeFalsy();
+    expect(tests.mocks.fetch.fetchMock).toBeCalledWith(
+      expect.objectContaining({
+        url: index.getDayTimesUrl(cityCode, day.date)
+      }));
+
+    expect(tests.mocks.audio.playMock).not.toHaveBeenCalled()
   })
 
   function testHeaders(headers) {

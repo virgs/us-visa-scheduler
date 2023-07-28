@@ -30,21 +30,18 @@ async function start() {
         console.log('Min allowed date: ' + new Date(minDate).toString());
         console.log('Num of attempts: ' + ++attempt)
         try {
-            await search()
+            await search(cityCodes)
         } catch (err) {
             console.error(err)
         }
 
-        const waitTime = (minIntervalBetweenFetchesInMinutes + Math.random() * randomizedIntervalBetweenFetchesInMinutes);
-        console.log('Waiting time: ' + Math.trunc(waitTime) + 'm')
-        await sleep(waitTime * 1000 * 60)
         console.log('-----------------------------')
     }
 }
 
 
-async function search() {
-    for (let cityCode of cityCodes) {
+async function search(cities) {
+    for (let cityCode of cities) {
         const cityAvailableDates = await fetchAvailableDates(cityCode);
         const cityAvailableDatesInTimeRange = cityAvailableDates
             .filter(item => {
@@ -55,31 +52,36 @@ async function search() {
         if (cityAvailableDatesInTimeRange.length > 0) {
             console.log(`The first one being on '${cityAvailableDatesInTimeRange[0].date}'. Filtering up to ${maxNumberOfCandidateDates} to avoid throttling`);
             await Promise.all(cityAvailableDatesInTimeRange
-                .filter((date, index) => index < maxNumberOfCandidateDates)
+                .filter((_, index) => index < maxNumberOfCandidateDates)
                 .map(async (date, index) => {
                     await sleep(secondsBetweenDateTimeFetchCalls * 1000 * index)
-                    await checkCandidateDate(cityCode, date);
+                    await checkDateTimes(cityCode, date);
                 }));
         } else {
             console.log('No candidate date was found for city ' + cityCode);
         }
     }
+    const waitTime = (minIntervalBetweenFetchesInMinutes + Math.random() * randomizedIntervalBetweenFetchesInMinutes);
+    console.log('Waiting time: ' + Math.trunc(waitTime) + 'm')
+    await sleep(waitTime * 1000 * 60)
 }
 
-async function checkCandidateDate(cityCode, bestDateOfFetch) {
-    console.log(`City ${cityCode}. Candidate day ${bestDateOfFetch.date}`);
+async function checkDateTimes(cityCode, day) {
+    console.log(`City ${cityCode}. Candidate day ${day.date}`);
     console.log('Checking times of the day');
-    const availableDateTimes = await fetchAvailableDateTimes(cityCode, bestDateOfFetch.date)
+    const availableDateTimes = await fetchAvailableDateTimes(cityCode, day.date)
     if (availableDateTimes.length > 0) {
         console.log('==================XXXX==================');
         console.log('City code: ' + cityCode);
-        console.log('Schedule it on: ' + bestDateOfFetch.date);
+        console.log('Schedule it on: ' + day.date);
         console.log('Available times: ' + availableDateTimes.toString());
         console.log('==================XXXX==================');
         await audio.play();
+        return true;
     } else {
         console.log('Available day has no available time');
     }
+    return false;
 }
 
 async function fetchAvailableDates(cityCode) {
@@ -138,7 +140,8 @@ if (typeof window !== "undefined") {
         getDayTimesUrl,
         getDatesUrl,
         fetchAvailableDateTimes,
-        fetchAvailableDates
+        fetchAvailableDates,
+        checkDateTimes
     }
 }
 
