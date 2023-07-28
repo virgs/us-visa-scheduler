@@ -133,15 +133,17 @@ if (typeof window !== "undefined") {
     void start();
 } else {
     module.exports = {
-        search,
         language,
         sessionNumber,
+        minIntervalBetweenFetchesInMinutes,
+        sleep,
         createRequest,
         getDayTimesUrl,
         getDatesUrl,
         fetchAvailableDateTimes,
         fetchAvailableDates,
-        checkDateTimes
+        checkDateTimes,
+        search
     }
 }
 

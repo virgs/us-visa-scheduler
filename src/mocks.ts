@@ -9,6 +9,9 @@ const mocks = {
     fetchMock: jest.fn(async (request) => ({
       json: mocks.fetch.jsonMock(request)
     }))
+  },
+  time: {
+    setTimeoutMock: jest.fn(async (promise, sleepTime) => promise())
   }
 }
 
@@ -33,12 +36,12 @@ const jsonMockImplementation = (request) => {
 }
 
 const testUtils = {
-  Audio: jest.fn().mockImplementation(() => ({
+  audio: jest.fn().mockImplementation(() => ({
     pause: mocks.audio.pauseMock,
     play: mocks.audio.playMock,
   })),
   fetch: mocks.fetch.fetchMock,
-  setTimeout: jest.fn(async (promise, sleepTime) => promise())
+  setTimeout: mocks.time.setTimeoutMock
 }
 
 module.exports = {

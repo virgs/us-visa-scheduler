@@ -4,8 +4,20 @@ const index = require('.');
 describe('tests', () => {
   beforeEach(() => {
     tests.mocks.audio.playMock.mockClear();
+    tests.mocks.time.setTimeoutMock.mockClear();
     tests.mocks.fetch.fetchMock.mockClear();
     tests.mocks.fetch.jsonMock().mockClear();
+  })
+
+  it('sleep should be called with right args', async () => {
+    const expectedSleepTime = 100;
+
+    await index.sleep(expectedSleepTime);
+
+    const mockLastCall = tests.mocks.time.setTimeoutMock.mock.lastCall;
+    expect(mockLastCall[0]).toEqual(expect.any(Function))
+    const actualSleepTime = mockLastCall[1]
+    expect(expectedSleepTime).toBe(actualSleepTime)
   })
 
   it('createRequest should use right values', () => {
@@ -100,6 +112,16 @@ describe('tests', () => {
       }));
 
     expect(tests.mocks.audio.playMock).not.toHaveBeenCalled()
+  })
+
+  it('search should call sleep at the end of its execution', () => {
+    index.search([])
+
+    expect(tests.mocks.time.setTimeoutMock).toHaveBeenCalledWith(expect.any(Function), expect.any(Number))
+    const sleepTime = tests.mocks.time.setTimeoutMock.mock.lastCall[1]
+
+    const minWaitTime = index.minIntervalBetweenFetchesInMinutes * 1000 * 60;
+    expect(sleepTime).toBeGreaterThan(minWaitTime)
   })
 
   function testHeaders(headers) {
