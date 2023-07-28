@@ -44,6 +44,28 @@ describe('tests', () => {
     expect(response).toEqual(["08:15"]);
   })
 
+  it('fetchAvailableDates should use right values', async () => {
+    const cityCode = 55;
+
+    const response = await index.fetchAvailableDates(cityCode);
+
+    expect(tests.mocks.fetch.fetchMock).toBeCalledWith(
+      expect.objectContaining({
+        url: index.getDatesUrl(cityCode),
+        method: `GET`
+      }));
+
+    testHeaders(tests.mocks.fetch.fetchMock.mock.lastCall[0].headers);
+    expect(response).toEqual([{
+      business_day: true,
+      date: "2023-01-01"
+    },
+    {
+      business_day: true,
+      date: "2023-02-11"
+    }]);
+  })
+
   function testHeaders(headers) {
     expect(headers.get('Accept')).toBe('application/json, text/javascript, */*; q=0.01');
     expect(headers.get('Accept-Encoding')).toBe('gzip, deflate, br');

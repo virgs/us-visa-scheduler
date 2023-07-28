@@ -126,7 +126,6 @@ type AvailableDateTimes = {
     business_times: string[]
 }
 
-
 function getDatesUrl(cityCode: number) {
     return `https://ais.usvisa-info.com/${language}/niv/schedule/${sessionNumber}/appointment/days/${cityCode}.json?appointments[expedite]=false`
 }

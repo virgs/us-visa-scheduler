@@ -1,26 +1,19 @@
-const audioSource = 'https://cdn.freesound.org/previews/533/533869_5828667-lq.mp3'
 const cityCodes = [55, 56]; // Rio, São Paulo
 const formattedMaxDate = '2023-02-28'; // YYYY-MM-DD
 const formattedMinDate = '2023-02-01'; // YYYY-MM-DD
-const maxNumberOfCandidateDates = 4; //avoid throttling
+const audioSource = 'https://cdn.freesound.org/previews/533/533869_5828667-lq.mp3'
 const language = 'pt-br';
 const sessionNumber = 38681568;
 
+//===================================
+
+const maxNumberOfCandidateDates = 4; //avoid throttling
 const minIntervalBetweenFetchesInMinutes = 2;
 const randomizedIntervalBetweenFetchesInMinutes = 2;
 const secondsBetweenDateTimeFetchCalls = 10;
 const audio = new Audio(audioSource)
 const maxDate = new Date(formattedMaxDate).getTime();
 const minDate = new Date(formattedMinDate).getTime();
-
-function getDatesUrl(cityCode) {
-    return `https://ais.usvisa-info.com/${language}/niv/schedule/${sessionNumber}/appointment/days/${cityCode}.json?appointments[expedite]=false`
-}
-
-
-function getDayTimesUrl(cityCode, availableDay) {
-    return `https://ais.usvisa-info.com/${language}/niv/schedule/${sessionNumber}/appointment/times/${cityCode}.json?date=${availableDay}&appointments[expedite]=false`
-}
 
 let forceStop = false
 
@@ -121,6 +114,15 @@ function createRequest(url) {
     });
 }
 
+function getDatesUrl(cityCode) {
+    return `https://ais.usvisa-info.com/${language}/niv/schedule/${sessionNumber}/appointment/days/${cityCode}.json?appointments[expedite]=false`
+}
+
+
+function getDayTimesUrl(cityCode, availableDay) {
+    return `https://ais.usvisa-info.com/${language}/niv/schedule/${sessionNumber}/appointment/times/${cityCode}.json?date=${availableDay}&appointments[expedite]=false`
+}
+
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -135,7 +137,8 @@ if (typeof window !== "undefined") {
         createRequest,
         getDayTimesUrl,
         getDatesUrl,
-        fetchAvailableDateTimes
+        fetchAvailableDateTimes,
+        fetchAvailableDates
     }
 }
 
