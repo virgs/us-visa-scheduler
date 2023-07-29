@@ -29,7 +29,8 @@ const jsonMockImplementation = (request) => {
     } if (request.url === "https://ais.usvisa-info.com/pt-br/niv/schedule/38681568/appointment/times/100.json?date=2023-02-15&appointments[expedite]=false") {
       return { available_times: [], business_times: ["08:15", "08:30", "09:15"] }
     } else {
-      console.error("Test scenario not anticipated: " + request.url)
+      console.error("Test scenario not anticipated: " + request.url);
+      return { available_times: ["08:15"], business_times: ["08:15", "08:30", "09:15"] }
     }
   }
   return []

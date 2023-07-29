@@ -6,7 +6,6 @@ describe('tests', () => {
     tests.mocks.audio.playMock.mockClear();
     tests.mocks.time.setTimeoutMock.mockClear();
     tests.mocks.fetch.fetchMock.mockClear();
-    tests.mocks.fetch.jsonMock().mockClear();
   })
 
   it('sleep should be called with right args', async () => {
@@ -114,8 +113,45 @@ describe('tests', () => {
     expect(tests.mocks.audio.playMock).not.toHaveBeenCalled()
   })
 
-  it('search should call sleep at the end of its execution', () => {
-    index.search([])
+  it('checkCityAvailableDates should call available dates for every city code up to the max', async () => {
+    const cityCode = 909
+    const dates = [
+      {
+        "date": "2020-03-01", "business_day": true
+      },
+      {
+        "date": "2020-04-01", "business_day": true
+      },
+      {
+        "date": "2020-05-01", "business_day": true
+      },
+      {
+        "date": "2020-06-01", "business_day": true
+      },
+      {
+        "date": "2020-07-01", "business_day": true
+      },
+      {
+        "date": "2020-08-01", "business_day": true
+      }];
+
+    await index.checkCityAvailableDates(dates, cityCode);
+
+    expect(tests.mocks.time.setTimeoutMock).toHaveBeenCalledTimes(index.maxNumberOfCandidateDates);
+    expect(tests.mocks.fetch.fetchMock).toHaveBeenCalledTimes(index.maxNumberOfCandidateDates);
+    for (let i = 0; i < index.maxNumberOfCandidateDates; ++i) {
+      expect(tests.mocks.time.setTimeoutMock).toHaveBeenNthCalledWith(i + 1, expect.any(Function),
+        index.intervalBetweenDateTimeFetchCallsInSeconds * 1000 * i);
+      expect(tests.mocks.fetch.fetchMock).toHaveBeenNthCalledWith(i + 1,
+        expect.objectContaining({
+          url: index.getDayTimesUrl(cityCode, dates[i].date)
+        }));
+    }
+
+  });
+
+  it('search should call sleep at the end of its execution', async () => {
+    await index.search([])
 
     expect(tests.mocks.time.setTimeoutMock).toHaveBeenCalledWith(expect.any(Function), expect.any(Number))
     const sleepTime = tests.mocks.time.setTimeoutMock.mock.lastCall[1]
@@ -123,6 +159,32 @@ describe('tests', () => {
     const minWaitTime = index.minIntervalBetweenFetchesInMinutes * 1000 * 60;
     expect(sleepTime).toBeGreaterThan(minWaitTime)
   })
+
+  it('search should check every city', async () => {
+    const cities = [55, 56];
+
+    await index.search(cities)
+
+    expect(tests.mocks.fetch.fetchMock).toHaveBeenCalledTimes(3);
+    expect(tests.mocks.fetch.fetchMock).toHaveBeenNthCalledWith(1,
+      expect.objectContaining({
+        url: index.getDatesUrl(cities[0])
+      }));
+    expect(tests.mocks.fetch.fetchMock).toHaveBeenNthCalledWith(2,
+      expect.objectContaining({
+        url: index.getDayTimesUrl(cities[0], '2023-02-11')
+      }));
+    expect(tests.mocks.fetch.fetchMock).toHaveBeenNthCalledWith(3,
+      expect.objectContaining({
+        url: index.getDatesUrl(cities[1])
+      }));
+
+    // const sleepTime = tests.mocks.time.setTimeoutMock.mock.lastCall[1]
+
+    // const minWaitTime = index.minIntervalBetweenFetchesInMinutes * 1000 * 60;
+    // expect(sleepTime).toBeGreaterThan(minWaitTime)
+  })
+
 
   function testHeaders(headers) {
     expect(headers.get('Accept')).toBe('application/json, text/javascript, */*; q=0.01');

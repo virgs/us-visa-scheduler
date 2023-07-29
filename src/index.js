@@ -1,6 +1,6 @@
 const cityCodes = [55, 56]; // Rio, São Paulo
-const formattedMaxDate = '2023-02-28'; // YYYY-MM-DD
-const formattedMinDate = '2023-02-01'; // YYYY-MM-DD
+const maxFormattedDate = '2023-02-28'; // YYYY-MM-DD
+const minFormattedDate = '2023-02-01'; // YYYY-MM-DD
 const audioSource = 'https://cdn.freesound.org/previews/533/533869_5828667-lq.mp3'
 const language = 'pt-br';
 const sessionNumber = 38681568;
@@ -9,11 +9,11 @@ const sessionNumber = 38681568;
 
 const maxNumberOfCandidateDates = 4; //avoid throttling
 const minIntervalBetweenFetchesInMinutes = 2;
-const randomizedIntervalBetweenFetchesInMinutes = 2;
-const secondsBetweenDateTimeFetchCalls = 10;
+const maxIntervalBetweenFetchesInMinutes = 4;
+const intervalBetweenDateTimeFetchCallsInSeconds = 10;
 const audio = new Audio(audioSource)
-const maxDate = new Date(formattedMaxDate).getTime();
-const minDate = new Date(formattedMinDate).getTime();
+const maxDate = new Date(maxFormattedDate).getTime();
+const minDate = new Date(minFormattedDate).getTime();
 
 let forceStop = false
 
@@ -50,20 +50,25 @@ async function search(cities) {
             })
         console.log(`Found ${cityAvailableDates.length} available dates. ${cityAvailableDatesInTimeRange.length} of them are in the time range`);
         if (cityAvailableDatesInTimeRange.length > 0) {
-            console.log(`The first one being on '${cityAvailableDatesInTimeRange[0].date}'. Filtering up to ${maxNumberOfCandidateDates} to avoid throttling`);
-            await Promise.all(cityAvailableDatesInTimeRange
-                .filter((_, index) => index < maxNumberOfCandidateDates)
-                .map(async (date, index) => {
-                    await sleep(secondsBetweenDateTimeFetchCalls * 1000 * index)
-                    await checkDateTimes(cityCode, date);
-                }));
+            await checkCityAvailableDates(cityAvailableDatesInTimeRange, cityCode);
         } else {
             console.log('No candidate date was found for city ' + cityCode);
         }
     }
-    const waitTime = (minIntervalBetweenFetchesInMinutes + Math.random() * randomizedIntervalBetweenFetchesInMinutes);
+    const maxMinDiff = maxIntervalBetweenFetchesInMinutes - minIntervalBetweenFetchesInMinutes;
+    const waitTime = (minIntervalBetweenFetchesInMinutes + Math.random() * maxMinDiff);
     console.log('Waiting time: ' + Math.trunc(waitTime) + 'm')
     await sleep(waitTime * 1000 * 60)
+}
+
+async function checkCityAvailableDates(cityAvailableDatesInTimeRange, cityCode) {
+    console.log(`The first one being on '${cityAvailableDatesInTimeRange[0].date}'. Filtering up to ${maxNumberOfCandidateDates} to avoid throttling`);
+    await Promise.all(cityAvailableDatesInTimeRange
+        .filter((_, index) => index < maxNumberOfCandidateDates)
+        .map(async (date, index) => {
+            await sleep(intervalBetweenDateTimeFetchCallsInSeconds * 1000 * index);
+            await checkDateTimes(cityCode, date);
+        }));
 }
 
 async function checkDateTimes(cityCode, day) {
@@ -136,6 +141,8 @@ if (typeof window !== "undefined") {
         language,
         sessionNumber,
         minIntervalBetweenFetchesInMinutes,
+        intervalBetweenDateTimeFetchCallsInSeconds,
+        maxNumberOfCandidateDates,
         sleep,
         createRequest,
         getDayTimesUrl,
@@ -143,6 +150,7 @@ if (typeof window !== "undefined") {
         fetchAvailableDateTimes,
         fetchAvailableDates,
         checkDateTimes,
+        checkCityAvailableDates,
         search
     }
 }
